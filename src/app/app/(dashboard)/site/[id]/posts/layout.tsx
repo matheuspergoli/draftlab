@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { prisma } from '@libs/prisma'
 import { redirect } from 'next/navigation'
-import { env } from '@environment/env.mjs'
+import { formatDomainUrl } from '@libs/utils'
 
 export const metadata: Metadata = {
 	title: 'Dashboard | Posts'
@@ -29,7 +29,7 @@ export default async function PostsLayout({ params, children }: SettingsLayoutPr
 		redirect('/')
 	}
 
-	const url = `http://${site?.subdomain}.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
+	const url = formatDomainUrl(site?.subdomain as string)
 
 	return (
 		<div>
