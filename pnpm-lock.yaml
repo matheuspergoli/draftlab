@@ -23,9 +23,6 @@ dependencies:
   '@editorjs/inline-code':
     specifier: ^1.4.0
     version: 1.4.0
-  '@editorjs/link':
-    specifier: ^2.5.0
-    version: 2.5.0
   '@editorjs/list':
     specifier: ^1.8.0
     version: 1.8.0
@@ -250,13 +247,6 @@ packages:
     resolution: {integrity: sha512-nJJx2eBgQyml7U8MdMdJNFY2RgZCOuvvXHEW73xsdu36ZXCd44eAo7vq1S5Jz9l8bC676SvNbRfeH/nojXK37A==}
     dependencies:
       '@codexteam/icons': 0.0.5
-    dev: false
-
-  /@editorjs/link@2.5.0:
-    resolution: {integrity: sha512-3Oa1VweBY7Sscjzw8pv1QcWGyP+XdPl6+yu+gXnSETyjz9TQRZUjved0qw2OomYOjMZ3RumrdDJXxoALlZdvuQ==}
-    dependencies:
-      '@babel/runtime': 7.22.15
-      '@codexteam/icons': 0.0.4
     dev: false
 
   /@editorjs/list@1.8.0:

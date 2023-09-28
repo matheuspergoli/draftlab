@@ -76,7 +76,6 @@ export const Editor = ({ post, siteSettings }: EditorProps) => {
 		const Embed = (await import('@editorjs/embed')).default
 		const List = (await import('@editorjs/list')).default
 		const Code = (await import('@editorjs/code')).default
-		const LinkTool = (await import('@editorjs/link')).default
 		const InlineCode = (await import('@editorjs/inline-code')).default
 
 		if (!ref.current) {
@@ -90,7 +89,6 @@ export const Editor = ({ post, siteSettings }: EditorProps) => {
 				data: post?.content ?? undefined,
 				tools: {
 					header: Header,
-					linkTool: LinkTool,
 					list: List,
 					code: Code,
 					inlineCode: InlineCode,
