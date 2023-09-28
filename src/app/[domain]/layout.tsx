@@ -3,7 +3,8 @@ import { Metadata } from 'next'
 import { prisma } from '@libs/prisma'
 import { fontMapper } from '@libs/fonts'
 import { notFound } from 'next/navigation'
-import { placeholderBlurhash } from '@libs/utils'
+import { Footer } from '@components/footer'
+import { placeholderBlurhash, cn } from '@libs/utils'
 
 import { ThemeMode } from '@shared/components/theme-mode'
 import { BlurImage } from '@shared/components/blur-image'
@@ -86,7 +87,7 @@ export default async function SiteLayout({
 	}
 
 	return (
-		<div className={fontMapper[site?.font as string]}>
+		<div className={cn(fontMapper[site?.font as string], 'flex flex-col')}>
 			<div className='flex justify-end p-5'>
 				<ThemeMode />
 			</div>
@@ -107,6 +108,9 @@ export default async function SiteLayout({
 				<p className='text-center font-bold'>{site?.name}</p>
 			</header>
 			{children}
+			<div className='flex-1'>
+				<Footer />
+			</div>
 		</div>
 	)
 }
