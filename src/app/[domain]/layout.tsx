@@ -87,7 +87,7 @@ export default async function SiteLayout({
 	}
 
 	return (
-		<div className={cn(fontMapper[site?.font as string], 'flex flex-col')}>
+		<div className={cn(fontMapper[site?.font as string], 'flex h-screen flex-col')}>
 			<div className='flex justify-end p-5'>
 				<ThemeMode />
 			</div>
@@ -107,10 +107,8 @@ export default async function SiteLayout({
 				</figure>
 				<p className='text-center font-bold'>{site?.name}</p>
 			</header>
-			{children}
-			<div className='flex-1'>
-				<Footer />
-			</div>
+			<div className='flex-1'>{children}</div>
+			<Footer />
 		</div>
 	)
 }
