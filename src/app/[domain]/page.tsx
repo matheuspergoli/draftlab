@@ -14,6 +14,9 @@ export default async function Page({ params }: { params: { domain: string } }) {
 		},
 		include: {
 			posts: {
+				orderBy: {
+					createdAt: 'desc'
+				},
 				select: {
 					id: true,
 					slug: true,
