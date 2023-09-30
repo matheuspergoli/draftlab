@@ -30,6 +30,19 @@ export async function POST(request: Request) {
 		)
 	}
 
+	const countSites = await prisma.site.count({
+		where: {
+			userId: session.user.id
+		}
+	})
+
+	if (countSites >= 3) {
+		return NextResponse.json(
+			{ error: 'You have reached the maximum number of sites.' },
+			{ status: 429 }
+		)
+	}
+
 	const data = await prisma.site.create({
 		data: {
 			...site,

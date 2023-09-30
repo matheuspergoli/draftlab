@@ -23,7 +23,9 @@ export default async function Page() {
 			<section>
 				<div className='flex items-center justify-between'>
 					<h2 className='text-xl font-semibold sm:text-2xl'>
-						{sites.length === 0 ? 'Você não tem sites' : `Seus sites: ${sites.length}`}
+						{sites.length === 0
+							? 'Você não tem sites'
+							: `Seus sites: ${sites.length} / 3`}
 					</h2>
 					<CreateSiteModal />
 				</div>

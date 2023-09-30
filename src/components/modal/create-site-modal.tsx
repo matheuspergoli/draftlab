@@ -76,6 +76,14 @@ export const CreateSiteModal = () => {
 			})
 		}
 
+		if (response.status === 429) {
+			toast({
+				variant: 'destructive',
+				title: 'Você chegou no limite de criação de sites!',
+				description: 'Você só pode criar 3 sites no total!'
+			})
+		}
+
 		setLoading(false)
 		router.refresh()
 	}
