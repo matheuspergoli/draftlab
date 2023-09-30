@@ -120,15 +120,15 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 	}
 
-	const data = await prisma.post.delete({
+	const post = await prisma.post.delete({
 		where: {
 			id: params.id
 		}
 	})
 
-	if (data.imageId) {
-		deleteFromCloudinary(data.imageId as unknown as string)
+	if (post.imageId) {
+		deleteFromCloudinary(post.imageId as unknown as string)
 	}
 
-	return NextResponse.json({ message: data, status: 200 })
+	return NextResponse.json({ message: post, status: 200 })
 }

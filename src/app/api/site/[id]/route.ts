@@ -64,19 +64,34 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 	}
 
-	const data = await prisma.site.delete({
+	const postIds = await prisma.post.findMany({
+		where: {
+			siteId: params.id
+		},
+		select: {
+			imageId: true
+		}
+	})
+
+	for (const post of postIds) {
+		if (post.imageId) {
+			deleteFromCloudinary(post.imageId as unknown as string)
+		}
+	}
+
+	const site = await prisma.site.delete({
 		where: {
 			id: params.id
 		}
 	})
 
-	if (data.imageId) {
-		deleteFromCloudinary(data.imageId as unknown as string)
+	if (site.imageId) {
+		deleteFromCloudinary(site.imageId as unknown as string)
 	}
 
-	if (data.logoId) {
-		deleteFromCloudinary(data.logoId as unknown as string)
+	if (site.logoId) {
+		deleteFromCloudinary(site.logoId as unknown as string)
 	}
 
-	return NextResponse.json({ message: data, status: 200 })
+	return NextResponse.json({ message: site, status: 200 })
 }
