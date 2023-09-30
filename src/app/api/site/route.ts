@@ -10,6 +10,19 @@ export async function POST(request: Request) {
 		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 	}
 
+	const countSites = await prisma.site.count({
+		where: {
+			userId: session.user.id
+		}
+	})
+
+	if (countSites >= 3) {
+		return NextResponse.json(
+			{ error: 'You have reached the maximum number of sites.' },
+			{ status: 429 }
+		)
+	}
+
 	const body = await request.json()
 
 	const site = CreateSiteSchema.parse(body)
@@ -27,19 +40,6 @@ export async function POST(request: Request) {
 		return NextResponse.json(
 			{ error: 'A site with that subdomain already exists.' },
 			{ status: 409 }
-		)
-	}
-
-	const countSites = await prisma.site.count({
-		where: {
-			userId: session.user.id
-		}
-	})
-
-	if (countSites >= 3) {
-		return NextResponse.json(
-			{ error: 'You have reached the maximum number of sites.' },
-			{ status: 429 }
 		)
 	}
 

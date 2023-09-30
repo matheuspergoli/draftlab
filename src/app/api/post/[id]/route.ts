@@ -65,6 +65,19 @@ export async function POST(request: Request, { params }: { params: { id: string 
 		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 	}
 
+	const postsCount = await prisma.post.count({
+		where: {
+			siteId: params.id
+		}
+	})
+
+	if (postsCount >= 4) {
+		return NextResponse.json(
+			{ error: 'You have reached the maximum number of posts.' },
+			{ status: 429 }
+		)
+	}
+
 	const body = await request.json()
 
 	const post = CreatePostSchema.parse(body)

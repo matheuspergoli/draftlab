@@ -58,11 +58,13 @@ export const Editor = ({ post, siteSettings }: EditorProps) => {
 				title: 'Post criado com sucesso.',
 				description: 'Vá para a página Posts para visualizá-lo.'
 			})
-		} else {
+		}
+
+		if (response.status === 429) {
 			toast({
 				variant: 'destructive',
-				title: 'Houve um erro ao salvar o post.',
-				description: 'Tente novamente mais tarde.'
+				title: 'Você chegou ao limite de posts.',
+				description: 'Você só pode criar 4 posts por site.'
 			})
 		}
 
