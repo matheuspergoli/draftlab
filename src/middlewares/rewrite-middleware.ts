@@ -10,6 +10,10 @@ export const RewriteMiddleware: MiddlewareFactory = () => {
 
 		const path = url.pathname
 
+		if (path.startsWith('/api')) {
+			return NextResponse.next()
+		}
+
 		if (hostname === `app.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
 			const session = await getToken({
 				req: request,

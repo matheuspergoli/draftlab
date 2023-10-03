@@ -1,25 +1,13 @@
 import { prisma } from '@libs/prisma'
 import { getSession } from '@libs/auth'
 import { NextResponse } from 'next/server'
-import { rateLimit } from '@libs/rate-limit'
 import { uploadToCloudinary, deleteFromCloudinary } from '@libs/cloudinary'
-
-const limiter = rateLimit({
-	limit: 5,
-	interval: 60 * 60 * 1000 // 1 hour
-})
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
 	const session = await getSession()
 
 	if (!session) {
 		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-	}
-
-	const { isRateLimited } = limiter.check(session.user.id)
-
-	if (isRateLimited) {
-		return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
 	}
 
 	if (request.headers.get('content-type')?.includes('multipart/form-data')) {
@@ -74,12 +62,6 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
 	if (!session) {
 		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-	}
-
-	const { isRateLimited } = limiter.check(session.user.id)
-
-	if (isRateLimited) {
-		return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
 	}
 
 	const postIds = await prisma.post.findMany({

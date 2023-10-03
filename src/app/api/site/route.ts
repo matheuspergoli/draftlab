@@ -1,25 +1,13 @@
 import { prisma } from '@libs/prisma'
 import { getSession } from '@libs/auth'
 import { NextResponse } from 'next/server'
-import { rateLimit } from '@libs/rate-limit'
 import { CreateSiteSchema } from '@validations/create-site-schema'
-
-const limiter = rateLimit({
-	limit: 5,
-	interval: 60 * 60 * 1000 // 1 hour
-})
 
 export async function POST(request: Request) {
 	const session = await getSession()
 
 	if (!session) {
 		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-	}
-
-	const { isRateLimited } = limiter.check(session.user.id)
-
-	if (isRateLimited) {
-		return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
 	}
 
 	const countSites = await prisma.site.count({
