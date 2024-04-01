@@ -1,9 +1,10 @@
-import { Editor } from '@components/editor'
+import { EditorCreate } from "@/features/post"
+import { DashboardLayout } from "@/shared/layouts/dashboard-layout"
 
 export default function Page() {
 	return (
-		<main className='container my-10'>
-			<Editor />
-		</main>
+		<DashboardLayout className="mx-auto">
+			<EditorCreate />
+		</DashboardLayout>
 	)
 }

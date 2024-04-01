@@ -1,20 +1,34 @@
-import '@/styles/globals.css'
+import "@/styles/globals.css"
 
-import type { Metadata } from 'next'
-import { Toaster } from '@shared/ui/toaster'
-import { Provider } from '@provider/provider'
+import React from "react"
+import type { Metadata, Viewport } from "next"
+
+import { Provider } from "@/providers/main-provider"
+import { SessionProvider } from "@/providers/session"
+import { ThemeProvider } from "@/providers/theme"
+import { TRPCReactProvider } from "@/shared/trpc/client"
+import { Toaster } from "@/shared/ui/sonner"
 
 export const metadata: Metadata = {
-	title: 'DraftLab Platforms',
-	description: 'Created by Matheus Pergoli'
+	title: "Draftlab",
+	description: "Created by Matheus Pergoli"
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const viewport: Viewport = {
+	initialScale: 1,
+	width: "device-width"
+}
+
+export default function RootLayout({
+	children
+}: Readonly<{ children: React.ReactNode }>) {
 	return (
-		<html lang='pt-br' suppressHydrationWarning>
+		<html lang="pt-BR" suppressHydrationWarning>
 			<body>
-				<Provider>{children}</Provider>
-				<Toaster />
+				<Provider providers={[SessionProvider, TRPCReactProvider, ThemeProvider]}>
+					{children}
+					<Toaster />
+				</Provider>
 			</body>
 		</html>
 	)

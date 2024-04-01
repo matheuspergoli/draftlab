@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider     = "mysql"
-  relationMode = "prisma"
-  url          = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Account {
@@ -46,10 +45,9 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-enum UserRole {
+enum Role {
   USER
   ADMIN
-  SUPERADMIN
 }
 
 model User {
@@ -58,49 +56,57 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?   @db.Text
-  imageId       String?
+  role          Role      @default(USER)
+  isBanned      Boolean   @default(false)
+
+  avatar   Media?  @relation("userAvatar", fields: [avatarId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  avatarId String?
 
   accounts Account[]
   sessions Session[]
-
-  role UserRole @default(USER)
 
   sites Site[]
   posts Post[]
 }
 
 model Site {
-  id          String   @id @default(cuid())
-  name        String?  @db.VarChar(32)
-  description String?  @db.VarChar(140)
-  font        String?  @default("font-inter")
-  message404  String?  @default("Ops, parece que você se aventurou em território desconhecido.") @db.VarChar(140)
-  logo        String?  @default("https://public.blob.vercel-storage.com/eEZHAoPTOBSYGBE3/JRajRyC-PhBHEinQkupt02jqfKacBVHLWJq7Iy.png")
-  logoId      String?
-  image       String?  @default("https://placehold.co/500x500/png?text=Thumbnail+Placeholder&font=roboto")
-  imageId     String?
-  subdomain   String?  @unique @db.VarChar(32)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String  @id @default(cuid())
+  name        String  @db.VarChar(32)
+  description String  @db.VarChar(140)
+  font        String? @default("font-inter")
+  message404  String? @default("Ops, parece que você se aventurou em território desconhecido.") @db.VarChar(140)
+  subdomain   String  @unique @db.VarChar(32)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  thumbnail   Media?  @relation("siteThumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  thumbnailId String?
+
+  logo   Media?  @relation("siteLogo", fields: [logoId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  logoId String?
 
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String?
 
-  posts Post[]
+  posts   Post[]
+  reports Report[]
 
   @@index([userId])
 }
 
 model Post {
-  id          String   @id @default(cuid())
-  title       String?  @db.VarChar(128)
-  description String?  @db.VarChar(255)
-  content     Json?
-  slug        String?  @unique @default(cuid())
-  image       String?  @default("https://placehold.co/500x500/png?text=Post+Image+Placeholder&font=roboto")
-  imageId     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String  @id @default(cuid())
+  title       String  @db.VarChar(128)
+  description String  @db.VarChar(255)
+  content     Json
+  slug        String? @unique @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  image   Media?  @relation("postImage", fields: [imageId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  imageId String?
 
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String?
@@ -110,4 +116,35 @@ model Post {
 
   @@index([userId])
   @@index([siteId])
+}
+
+model Media {
+  id   String  @id @default(cuid())
+  url  String? @default("https://placehold.co/600x600/png?text=Image+Placeholder&font=roboto")
+  path String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userAvatar    User[]   @relation("userAvatar")
+  siteThumbnail Site[]   @relation("siteThumbnail")
+  siteLogo      Site[]   @relation("siteLogo")
+  postImage     Post[]   @relation("postImage")
+  reportImage   Report[] @relation("reportImage")
+}
+
+model Report {
+  id     String  @id @default(cuid())
+  userIp String
+  reason String
+  status Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  site   Site?   @relation(fields: [siteId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  siteId String?
+
+  image   Media?  @relation("reportImage", fields: [imageId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  imageId String?
 }

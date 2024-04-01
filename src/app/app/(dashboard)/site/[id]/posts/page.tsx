@@ -1,41 +1,36 @@
-import Link from 'next/link'
-import { cn } from '@libs/utils'
-import { prisma } from '@libs/prisma'
-import { PostCard } from '@components/card'
-import { buttonVariants } from '@shared/ui/button'
+import { CardPost } from "@/features/post"
+import { DashboardLayout } from "@/shared/layouts/dashboard-layout"
+import { Routes } from "@/shared/navigation/routes"
+import { api } from "@/shared/trpc/server"
 
-export default async function Page({ params }: { params: { id: string } }) {
-	const postsForSite = await prisma.post.findMany({
-		where: {
-			siteId: params.id
-		}
-	})
+interface Props {
+	params: unknown
+}
+
+export default async function Page({ params }: Props) {
+	const { id } = Routes.sitePosts.parseParams(params)
+	const posts = await api.post.getSitePosts({ siteId: id })
 
 	return (
-		<main className='container my-10'>
-			{postsForSite.length === 0 ? (
-				<div className='mt-20 text-center'>
-					<h2 className='mb-5 text-xl font-semibold sm:text-2xl'>Você não tem posts</h2>
-					<Link href={`/site/${params.id}/post`} className={cn(buttonVariants())}>
-						Comece a criar
-					</Link>
-				</div>
+		<DashboardLayout className="container max-w-5xl">
+			{posts.length > 0 ? (
+				<h1 className="mb-10 text-3xl font-bold">Posts</h1>
 			) : (
-				<h2 className='text-xl font-semibold sm:text-2xl'>
-					{`Seus posts: ${postsForSite.length} / 4`}
-				</h2>
+				<h1 className="mb-10 text-3xl font-bold">Nenhum post encontrado</h1>
 			)}
-			<article className='mt-5 grid w-full grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3'>
-				{postsForSite.map((post) => (
-					<Link key={post.id} href={`/post/${post.id}`}>
-						<PostCard
-							title={post.title!}
-							image={post.image!}
-							description={post.description!}
+			<div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+				{posts &&
+					posts.map((post) => (
+						<CardPost
+							key={post.id}
+							postId={post.id}
+							image={post.image?.url ?? ""}
+							title={post.title ?? ""}
+							createdAt={post.createdAt}
+							description={post.description ?? ""}
 						/>
-					</Link>
-				))}
-			</article>
-		</main>
+					))}
+			</div>
+		</DashboardLayout>
 	)
 }

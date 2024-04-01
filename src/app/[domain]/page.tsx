@@ -1,111 +1,115 @@
-import Link from 'next/link'
-import { prisma } from '@libs/prisma'
-import { PostCard } from '@components/card'
-import { PostProfile } from '@components/profile'
-import { placeholderBlurhash } from '@libs/utils'
-import { BlurImage } from '@shared/components/blur-image'
+import Link from "next/link"
+import { notFound } from "next/navigation"
 
-export default async function Page({ params }: { params: { domain: string } }) {
-	const subdomain = params.domain.split('.')[0]
+import { run } from "@/libs/utils"
+import { BlurImage } from "@/shared/components/blur-image"
+import { Routes } from "@/shared/navigation/routes"
+import { api } from "@/shared/trpc/server"
+import { Carousel, CarouselContent, CarouselItem } from "@/shared/ui/carousel"
 
-	const site = await prisma.site.findUnique({
-		where: {
-			subdomain: subdomain as string
-		},
-		include: {
-			posts: {
-				orderBy: {
-					createdAt: 'desc'
-				},
-				select: {
-					id: true,
-					slug: true,
-					title: true,
-					image: true,
-					createdAt: true,
-					description: true
-				}
-			},
-			user: {
-				select: {
-					name: true,
-					image: true
-				}
-			}
-		}
-	})
+interface Props {
+	params: { domain: string }
+}
 
-	const heroPost = site?.posts[0]
-	const posts = site?.posts.slice(1)
+export default async function Page({ params }: Props) {
+	const subdomain = params.domain.split(".")[0] as string
+
+	const site = await api.site.getSiteBySubdomain({ subdomain })
+
+	if (!site) {
+		notFound()
+	}
+
+	const heroPost = site.posts[0]
+	const remainingPosts = site.posts.slice(1)
 
 	return (
-		<main className='container mb-10'>
-			{heroPost ? (
-				<div>
-					<Link href={`/${heroPost?.slug}`}>
-						<figure className='mb-5 h-96 w-full overflow-hidden rounded-lg'>
-							<BlurImage
-								src={heroPost?.image ?? ''}
-								blurDataURL={placeholderBlurhash}
-								placeholder='blur'
-								className='h-full w-full rounded-lg object-cover'
-								width={500}
-								height={500}
-								alt={heroPost?.title ?? 'Imagem do post'}
-							/>
-						</figure>
-					</Link>
-					<section className='flex flex-wrap items-center justify-between gap-5'>
-						<div>
-							<h1 className='text-3xl font-bold'>{heroPost?.title}</h1>
-							<h2 className='text-xl'>{heroPost?.description}</h2>
-						</div>
-						<PostProfile
-							name={site?.user?.name as string}
-							image={site?.user?.image as string}
-						/>
-					</section>
-				</div>
-			) : (
-				<section className='mb-10 flex flex-col gap-5 text-center'>
-					<h1 className='text-3xl font-bold'>Bem vindo ao {site?.name}</h1>
-					<h2 className='text-xl'>{site?.description}</h2>
-					<div className='mx-auto flex w-fit items-center gap-2'>
-						<figure className='h-10 w-10 overflow-hidden rounded-full'>
-							<BlurImage
-								width={100}
-								height={100}
-								alt={site?.user?.name as string}
-								src={site?.user?.image as string}
-								placeholder='blur'
-								blurDataURL={placeholderBlurhash}
-								className='h-10 w-10 rounded-full object-cover'
-							/>
-						</figure>
-						<p className='text-lg font-bold'>{site?.user?.name}</p>
-					</div>
-				</section>
-			)}
-
-			<hr className='my-10 border' />
-
-			{posts && posts.length > 0 && (
-				<>
-					<p className='mb-5 text-2xl font-bold'>Mais posts</p>
-					<section className='grid w-full grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3'>
-						{posts?.map((post) => (
-							<Link key={post.id!} href={`/${post.slug}`}>
-								<PostCard
-									title={post.title!}
-									image={post.image!}
-									createdAt={post.createdAt!}
-									description={post.description!}
-								/>
+		<>
+			{run(() => {
+				if (heroPost) {
+					return (
+						<article className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+							<Link
+								href={Routes.domainPost({ slug: heroPost.slug as string })}
+								className="relative col-span-2 block h-[500px] w-full overflow-hidden rounded-lg border">
+								<figure>
+									<BlurImage
+										src={heroPost.image?.url ?? ""}
+										alt={heroPost.title}
+										fill
+										className="h-full w-full rounded-lg object-cover"
+									/>
+									<div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black via-black/70 to-transparent p-5">
+										<h1 className="text-3xl font-bold">{heroPost.title}</h1>
+										<p>{heroPost.description}</p>
+									</div>
+								</figure>
 							</Link>
-						))}
-					</section>
-				</>
+
+							<Carousel>
+								<CarouselContent className="col-span-1 hidden h-[500px] lg:flex">
+									{remainingPosts.map((post) => (
+										<CarouselItem key={post.id}>
+											<Link
+												href={Routes.domainPost({ slug: post.slug as string })}
+												className="relative block h-full w-full overflow-hidden rounded-lg border">
+												<figure>
+													<BlurImage
+														src={post.image?.url ?? ""}
+														alt={post.title}
+														fill
+														className="h-full w-full rounded-lg object-cover"
+													/>
+													<div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black via-black/30 to-transparent p-5">
+														<h2 className="text-3xl font-bold">{post.title}</h2>
+														<p>{post.description}</p>
+													</div>
+												</figure>
+											</Link>
+										</CarouselItem>
+									))}
+								</CarouselContent>
+							</Carousel>
+						</article>
+					)
+				}
+
+				return null
+			})}
+
+			{remainingPosts.length > 0 && (
+				<h2 className="my-20 text-center text-5xl font-bold">Mais posts</h2>
 			)}
-		</main>
+
+			{run(() => {
+				if (remainingPosts.length > 0) {
+					return (
+						<section className="grid grid-cols-1 gap-5 md:grid-cols-2">
+							{remainingPosts.map((post) => (
+								<article key={post.id} className="flex flex-col gap-5">
+									<Link href={Routes.domainPost({ slug: post.slug as string })}>
+										<figure className="h-[300px] w-full overflow-hidden rounded-lg border">
+											<BlurImage
+												src={post.image?.url ?? ""}
+												alt={post.title}
+												width={500}
+												height={500}
+												className="h-full w-full rounded-lg object-cover"
+											/>
+										</figure>
+									</Link>
+									<div>
+										<h2 className="text-xl font-bold">{post.title}</h2>
+										<p>{post.description}</p>
+									</div>
+								</article>
+							))}
+						</section>
+					)
+				}
+
+				return null
+			})}
+		</>
 	)
 }

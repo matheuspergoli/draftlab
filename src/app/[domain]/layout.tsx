@@ -1,48 +1,28 @@
-import Link from 'next/link'
-import { Metadata } from 'next'
-import { prisma } from '@libs/prisma'
-import { fontMapper } from '@libs/fonts'
-import { notFound } from 'next/navigation'
-import { Footer } from '@components/footer'
-import { placeholderBlurhash, cn } from '@libs/utils'
+import React from "react"
+import { Metadata } from "next"
+import Link from "next/link"
+import { notFound } from "next/navigation"
 
-import { ThemeMode } from '@shared/components/theme-mode'
-import { BlurImage } from '@shared/components/blur-image'
+import { ReportWidget } from "@/features/report"
+import { api } from "@/shared/trpc/server"
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar"
 
 export async function generateMetadata({
 	params
 }: {
 	params: { domain: string }
 }): Promise<Metadata | null> {
-	const url = params.domain.split('.')[0]
+	const url = params.domain.split(".")[0]
 
-	const data = await prisma.site.findUnique({
-		where: {
-			subdomain: url
-		},
-		select: {
-			name: true,
-			description: true,
-			image: true,
-			logo: true
-		}
+	const data = await api.site.getSiteBySubdomain({
+		subdomain: url ?? ""
 	})
 
 	if (!data) {
 		return null
 	}
 
-	const {
-		name: title,
-		description,
-		image,
-		logo
-	} = data as {
-		name: string
-		description: string
-		image: string
-		logo: string
-	}
+	const { name: title, description, logo, thumbnail } = data
 
 	return {
 		title,
@@ -50,16 +30,16 @@ export async function generateMetadata({
 		openGraph: {
 			title,
 			description,
-			images: [image]
+			images: [thumbnail?.url as string]
 		},
 		twitter: {
-			card: 'summary_large_image',
 			title,
 			description,
-			images: [logo],
-			creator: 'Matheus DraftCode'
+			images: [logo?.url as string],
+			creator: "Matheus Pergoli",
+			card: "summary_large_image"
 		},
-		icons: [logo],
+		icons: [logo?.url as string],
 		metadataBase: new URL(`https://${url}`)
 	}
 }
@@ -71,15 +51,10 @@ export default async function SiteLayout({
 	params: { domain: string }
 	children: React.ReactNode
 }) {
-	const site = await prisma.site.findUnique({
-		where: {
-			subdomain: params.domain.split('.')[0]
-		},
-		select: {
-			name: true,
-			font: true,
-			logo: true
-		}
+	const url = params.domain.split(".")[0]
+
+	const site = await api.site.getSiteBySubdomain({
+		subdomain: url ?? ""
 	})
 
 	if (!site) {
@@ -87,28 +62,54 @@ export default async function SiteLayout({
 	}
 
 	return (
-		<div className={cn(fontMapper[site?.font as string], 'flex h-screen flex-col')}>
-			<div className='flex justify-end p-5'>
-				<ThemeMode />
-			</div>
-			<header className='container mb-20 mt-5'>
-				<figure className='mx-auto h-20 w-20 overflow-hidden rounded-full'>
-					<Link href='/'>
-						<BlurImage
-							alt='Logo'
-							src={site?.logo as string}
-							blurDataURL={placeholderBlurhash}
-							placeholder='blur'
-							width={100}
-							height={100}
-							className='h-full w-full rounded-full object-cover'
-						/>
-					</Link>
-				</figure>
-				<p className='text-center font-bold'>{site?.name}</p>
+		<main className="container mx-auto flex h-screen flex-col px-5">
+			<header className="mb-10 flex items-center justify-between gap-5 border-b py-3">
+				<Link href="/">
+					<p className="text-balance text-3xl font-bold tracking-tighter">{site.name}</p>
+				</Link>
+
+				<Avatar>
+					<AvatarImage src={site.logo?.url ?? ""} alt={site.name} />
+					<AvatarFallback>CN</AvatarFallback>
+				</Avatar>
 			</header>
-			<div className='flex-1'>{children}</div>
-			<Footer />
-		</div>
+			<div className="flex-1">{children}</div>
+			<footer className="mt-40 flex w-full flex-col items-center justify-center gap-4 border-t py-8 text-sm sm:flex-row">
+				<p className="text-center">
+					Draftlab criado por{" "}
+					<a
+						href="https://www.linkedin.com/in/matheuspergoli"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="underline">
+						Matheus Pergoli
+					</a>
+				</p>
+				<div className="size-1 rounded-full bg-white/10" />
+				<p className="text-center">
+					Conecte-se comigo no{" "}
+					<a
+						href="https://www.linkedin.com/in/matheuspergoli"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="underline">
+						LinkedIn
+					</a>
+				</p>
+				<div className="size-1 rounded-full bg-white/10" />
+				<p className="text-center">
+					Me siga no{" "}
+					<a
+						href="https://github.com/matheus"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="underline">
+						Github
+					</a>
+				</p>
+			</footer>
+
+			<ReportWidget />
+		</main>
 	)
 }

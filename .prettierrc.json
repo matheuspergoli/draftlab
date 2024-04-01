@@ -4,10 +4,22 @@
 	"useTabs": true,
 	"endOfLine": "lf",
 	"printWidth": 90,
-	"singleQuote": true,
-	"jsxSingleQuote": true,
+	"singleQuote": false,
+	"jsxSingleQuote": false,
 	"bracketSpacing": true,
 	"bracketSameLine": true,
 	"trailingComma": "none",
-	"plugins": ["prettier-plugin-tailwindcss"]
+	"importOrder": [
+		"^(react/(.*)$)|^(react$)|^(react-dom/(.*)$)|^(react-dom$)",
+		"^(next/(.*)$)|^(next$)",
+		"",
+		"<THIRD_PARTY_MODULES>",
+		"^(\\w)",
+		"",
+		"^(\\@/)",
+		"",
+		"^[./]"
+	],
+	"importOrderParserPlugins": ["typescript", "jsx", "decorators-legacy"],
+	"plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"]
 }

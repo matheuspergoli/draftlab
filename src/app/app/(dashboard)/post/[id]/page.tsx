@@ -1,43 +1,31 @@
-import { Metadata } from 'next'
-import { prisma } from '@libs/prisma'
-import { redirect } from 'next/navigation'
-import { Editor } from '@components/editor'
+import { redirect } from "next/navigation"
 
-export const metadata: Metadata = {
-	title: 'Post | Editor'
+import { JSONContent } from "@tiptap/react"
+
+import { EditorUpdate } from "@/features/post"
+import { DashboardLayout } from "@/shared/layouts/dashboard-layout"
+import { Routes } from "@/shared/navigation/routes"
+import { api } from "@/shared/trpc/server"
+
+interface Props {
+	params: unknown
 }
 
-export default async function Page({ params }: { params: { id: string } }) {
-	const post = await prisma.post.findUnique({
-		where: {
-			id: params.id
-		},
-		include: {
-			site: {
-				select: {
-					id: true
-				}
-			}
-		}
-	})
+export default async function Page({ params }: Props) {
+	const { id } = Routes.postSettings.parseParams(params)
+	const post = await api.post.getPostById({ id })
 
-	if (!post || !post.site) {
-		redirect('/dashboard')
+	if (!post) {
+		redirect(Routes.overview())
 	}
 
 	return (
-		<main className='container my-10'>
-			<Editor
-				post={{
-					id: post.id,
-					title: post.title,
-					content: post.content,
-					description: post.description
-				}}
-				siteSettings={{
-					siteId: post.site.id
-				}}
+		<DashboardLayout className="mx-auto">
+			<EditorUpdate
+				content={post.content as JSONContent}
+				title={post.title}
+				description={post.description}
 			/>
-		</main>
+		</DashboardLayout>
 	)
 }

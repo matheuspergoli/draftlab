@@ -1,68 +1,33 @@
-import { prisma } from '@libs/prisma'
-import { FontForm, Form } from '@components/form'
+import { redirect } from "next/navigation"
 
-export default async function Page({ params }: { params: { id: string } }) {
-	const site = await prisma.site.findUnique({
-		where: {
-			id: params.id
-		},
-		select: {
-			logo: true,
-			image: true,
-			font: true,
-			message404: true
-		}
-	})
+import { EditSiteAppearanceForm } from "@/features/site"
+import { DashboardLayout } from "@/shared/layouts/dashboard-layout"
+import { Routes } from "@/shared/navigation/routes"
+import { api } from "@/shared/trpc/server"
+
+interface Props {
+	params: unknown
+}
+
+export default async function Page({ params }: Props) {
+	const { id } = Routes.siteAppearance.parseParams(params)
+	const site = await api.site.getSiteById({ id })
+
+	if (!site) {
+		redirect(Routes.overview())
+	}
 
 	return (
-		<main className='container my-10'>
-			<div className='flex flex-col gap-5'>
-				<Form
-					title='Imagem Thumbnail'
-					description='A imagem de thumbnail para o seu site. Clique na imagem para alterá-la.'
-					targetUpdate='site'
-					inputSettings={{
-						name: 'image',
-						type: 'file',
-						placeholder: 'Thumbnail image for My site',
-						defaultValue: site?.image ?? ''
-					}}
+		<DashboardLayout>
+			<section>
+				<h1 className="mb-10 text-3xl font-bold">Aparência</h1>
+				<EditSiteAppearanceForm
+					message404={site.message404 ?? ""}
+					font={site.font ?? ""}
+					logo={site.logo?.url ?? ""}
+					thumbnail={site.thumbnail?.url ?? ""}
 				/>
-
-				<Form
-					title='Logo'
-					description='A imagem de logo para o seu site. Clique na imagem para alterá-la.'
-					targetUpdate='site'
-					inputSettings={{
-						name: 'logo',
-						type: 'file',
-						placeholder: 'Logo for My site',
-						defaultValue: site?.logo ?? ''
-					}}
-				/>
-
-				<FontForm
-					title='Fonte'
-					description='Selecione uma fonte para o seu site.'
-					inputSettings={{
-						name: 'font',
-						placeholder: 'Selecione uma fonte para o seu site',
-						defaultValue: site?.font ?? ''
-					}}
-				/>
-
-				<Form
-					title='Mensagem de erro 404'
-					description='Mensagem de erro para quando o usuário acessar uma página que não existe.'
-					targetUpdate='site'
-					inputSettings={{
-						name: 'message404',
-						type: 'text',
-						placeholder: 'Página não encontrada',
-						defaultValue: site?.message404 ?? ''
-					}}
-				/>
-			</div>
-		</main>
+			</section>
+		</DashboardLayout>
 	)
 }

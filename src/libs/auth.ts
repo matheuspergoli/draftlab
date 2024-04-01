@@ -1,11 +1,12 @@
-import { prisma } from '@libs/prisma'
-import { env } from '@environment/env.mjs'
-import { PrismaAdapter } from '@auth/prisma-adapter'
-import GithubProvider from 'next-auth/providers/github'
-import { NextAuthOptions, getServerSession } from 'next-auth'
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import { getServerSession, NextAuthOptions } from "next-auth"
+import GithubProvider from "next-auth/providers/github"
+
+import { env } from "@/environment/env"
+import { prisma } from "@/libs/prisma"
 
 export const authOptions: NextAuthOptions = {
-	adapter: PrismaAdapter(prisma) as NextAuthOptions['adapter'],
+	adapter: PrismaAdapter(prisma) as NextAuthOptions["adapter"],
 	providers: [
 		GithubProvider({
 			clientId: env.GITHUB_CLIENT_ID,
@@ -15,21 +16,60 @@ export const authOptions: NextAuthOptions = {
 	callbacks: {
 		async session({ token, session }) {
 			if (token) {
-				session.user.id = token.id as string
-				session.user.role = token.role as string
-				session.user.name = token.name as string
-				session.user.email = token.email as string
-				session.user.image = token.image as string
+				session.user.id = token.id
+				session.user.name = token.name
+				session.user.email = token.email
+				session.user.avatar = token.avatar
+				session.user.role = token.role
+				session.user.isBanned = token.isBanned
 			}
 
 			return session
 		},
-		async jwt({ token, user }) {
+		async jwt({ token, user, trigger }) {
 			const dbUser = await prisma.user.findFirst({
 				where: {
 					email: token.email
+				},
+				select: {
+					id: true,
+					name: true,
+					email: true,
+					avatar: true,
+					role: true,
+					isBanned: true
 				}
 			})
+
+			if (trigger === "signUp") {
+				await prisma.user.upsert({
+					where: {
+						id: dbUser?.id
+					},
+					update: {
+						name: user?.name,
+						avatar: {
+							upsert: {
+								create: {
+									url: user?.image
+								},
+								update: {
+									url: user?.image
+								}
+							}
+						}
+					},
+					create: {
+						name: user?.name,
+						email: token.email,
+						avatar: {
+							create: {
+								url: user?.image
+							}
+						}
+					}
+				})
+			}
 
 			if (!dbUser) {
 				if (user) {
@@ -40,20 +80,19 @@ export const authOptions: NextAuthOptions = {
 
 			return {
 				id: dbUser.id,
-				role: dbUser.role,
 				name: dbUser.name,
 				email: dbUser.email,
-				image: dbUser.image
+				avatar: dbUser.avatar,
+				role: dbUser.role,
+				isBanned: dbUser.isBanned
 			}
 		}
 	},
 	pages: {
-		signIn: '/login',
-		verifyRequest: '/login',
-		error: '/login'
+		signIn: "/login"
 	},
 	session: {
-		strategy: 'jwt'
+		strategy: "jwt"
 	},
 	secret: env.NEXTAUTH_SECRET
 }

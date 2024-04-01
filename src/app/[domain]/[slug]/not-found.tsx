@@ -1,30 +1,29 @@
-import Image from 'next/image'
-import { prisma } from '@libs/prisma'
-import { headers } from 'next/headers'
+import { headers } from "next/headers"
+import Image from "next/image"
+import { notFound } from "next/navigation"
+
+import { api } from "@/shared/trpc/server"
 
 export default async function NotFound() {
 	const headersList = headers()
-	const domain = headersList.get('host')!.split('.')[0]
+	const domain = headersList.get("host")?.split(".")[0]
 
-	const site = await prisma.site.findUnique({
-		where: {
-			subdomain: domain
-		},
-		select: {
-			message404: true
-		}
-	})
+	if (!domain) {
+		notFound()
+	}
+
+	const site = await api.site.getSiteMessage404({ subdomain: domain })
 
 	return (
-		<div className='flex flex-col items-center justify-center'>
-			<p className='text-center text-lg text-stone-500'>
+		<div className="flex flex-col items-center justify-center">
+			<p className="text-center text-lg text-stone-500">
 				{site
 					? site.message404
-					: 'Ops, parece que você se aventurou em território desconhecido.'}
+					: "Ops, parece que você se aventurou em território desconhecido."}
 			</p>
 			<Image
-				alt='missing site'
-				src='https://illustrations.popsy.co/gray/timed-out-error.svg'
+				alt="missing site"
+				src="https://illustrations.popsy.co/gray/timed-out-error.svg"
 				width={400}
 				height={400}
 			/>
